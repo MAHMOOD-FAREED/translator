@@ -1,0 +1,576 @@
+ <!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urdu English InPage Converter & Real Translator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        nastaliq: ['Noto Nastaliq Urdu', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .light ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Shimmer loading animation for translation */
+        .shimmer {
+            background: linear-gradient(90deg, transparent 25%, rgba(16, 185, 129, 0.1) 50%, transparent 75%);
+            background-size: 200% 100%;
+            animation: loadingShimmer 1.5s infinite;
+        }
+        @keyframes loadingShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen font-sans transition-colors duration-300 flex flex-col justify-between">
+
+    <header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-600 text-white p-2 rounded-xl shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-language text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Urdu English InPage Converter</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Dual Processing Mode: Direct Conversion & Cloud Translation</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30">
+                    <i class="fa-solid fa-user-check mr-1.5"></i> Made for Muhammad Javed
+                </span>
+                <button id="themeToggle" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95" title="Toggle Theme">
+                    <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        
+        <div class="bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4 transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Source Input Language</span>
+                    <div class="bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 flex">
+                        <button id="srcUrduBtn" onclick="setInputLang('ur')" class="px-3 py-1 text-xs font-medium rounded-md transition-all shadow-sm bg-emerald-600 text-white">Urdu / Roman</button>
+                        <button id="srcEngBtn" onclick="setInputLang('en')" class="px-3 py-1 text-xs font-medium rounded-md text-slate-600 dark:text-slate-400 transition-all">English</button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <button id="swapLangBtn" class="p-1.5 text-xs text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Swap Conversion Mode">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Swap
+                    </button>
+                    <button id="clearInputBtn" class="p-1.5 text-xs text-slate-500 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all" title="Clear Text">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative">
+                <textarea id="textInput" placeholder="Type here, paste text, or use the microphone to dictate..." 
+                    class="w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-4 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all resize-none text-base leading-relaxed placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                ></textarea>
+                
+                <div id="voiceIndicator" class="hidden absolute bottom-4 left-4 flex items-center space-x-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-3 py-1.5 rounded-full border border-rose-200 dark:border-rose-900/30 text-xs font-medium animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                    <span id="voiceStatusText">Listening...</span>
+                </div>
+                
+                <div class="absolute bottom-4 right-4 text-xs font-medium text-slate-400 space-x-2 bg-white/80 dark:bg-slate-900/80 px-2 py-1 rounded-md backdrop-blur">
+                    <span id="inputCharCount">0 chars</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+                <div class="text-xs text-slate-400 flex items-center">
+                    <i class="fa-solid fa-circle-info mr-1.5 text-emerald-600"></i>
+                    <span id="detectionIndicator">Auto-detecting language type...</span>
+                </div>
+                
+                <button id="micBtn" class="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 transition-all active:scale-95 group">
+                    <i id="micIcon" class="fa-solid fa-microphone transition-transform group-hover:scale-110"></i>
+                    <span id="micText">Voice Input</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-4 transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Processing Mode:</span>
+                    <div class="bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 flex border border-slate-200 dark:border-slate-700">
+                        <button id="modeDirectBtn" onclick="setOutputMode('direct')" class="px-3 py-1 text-xs font-semibold rounded-md transition-all shadow-sm bg-emerald-600 text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-font"></i> Direct Text/InPage
+                        </button>
+                        <button id="modeTranslateBtn" onclick="setOutputMode('translate')" class="px-3 py-1 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-400 transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-language"></i> AI Translation Mode
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-1 self-end sm:self-auto">
+                    <span id="translationStatus" class="hidden text-xs font-medium text-emerald-600 animate-pulse mr-2">
+                        <i class="fa-solid fa-spinner animate-spin mr-1"></i>Translating...
+                    </span>
+                    <button id="ttsBtn" class="p-2 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Listen to Translation">
+                        <i class="fa-solid fa-volume-high text-sm"></i>
+                    </button>
+                    <button id="downloadBtn" class="p-2 text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Download Text File (.txt)">
+                        <i class="fa-solid fa-download text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative">
+                <div id="textOutput" dir="rtl" class="w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 overflow-y-auto text-xl font-nastaliq leading-[2.2] text-right placeholder:text-slate-400 select-all transition-all"></div>
+                
+                <div class="absolute bottom-4 left-4 text-xs font-medium text-slate-400 bg-white/80 dark:bg-slate-900/80 px-2 py-1 rounded-md backdrop-blur">
+                    <span id="targetBadge" class="text-emerald-600 dark:text-emerald-400 font-semibold mr-2">[InPage Unicode Urdu]</span>
+                    <span id="outputCharCount">0 characters</span>
+                </div>
+            </div>
+
+            <button id="copyBtn" class="w-full flex items-center justify-center space-x-2 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-950 font-semibold py-3 px-4 rounded-xl shadow-md transition-all active:scale-[0.99]">
+                <i class="fa-regular fa-copy"></i>
+                <span id="copyBtnText">Copy Text for InPage</span>
+            </button>
+        </div>
+    </main>
+
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-1 bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                <span>Recent History</span>
+                <button onclick="clearHistory()" class="text-[10px] lowercase text-rose-500 hover:underline">Clear all</button>
+            </h3>
+            <div id="historyList" class="space-y-2 max-h-36 overflow-y-auto pr-1 text-xs">
+                <p class="text-slate-400 dark:text-slate-500 italic py-2">No dynamic history entries found.</p>
+            </div>
+        </div>
+
+        <div class="md:col-span-2 bg-gradient-to-br from-emerald-900/5 to-teal-900/5 dark:from-emerald-950/20 dark:to-slate-900 border border-emerald-500/10 dark:border-emerald-500/5 rounded-xl p-5 flex items-start space-x-4">
+            <div class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 p-2.5 rounded-lg mt-0.5">
+                <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-white">InPage Typing Compatibility Assurance Notice</h4>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                    Toggle between <strong>Direct Text mode</strong> to maintain your original dictated alphabet layouts or <strong>AI Translation Mode</strong> to grammatically change languages dynamically across English and Urdu. Paste results freely into standard InPage text layers.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 py-4 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+            <div>
+                &copy; 2026 Urdu English InPage Converter Engine. All rights reserved.
+            </div>
+            <div class="flex items-center space-x-2 font-medium text-slate-500 dark:text-slate-400">
+                <span>Custom Built Application Suite</span>
+                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                <span class="text-emerald-600 dark:text-emerald-400 font-semibold"><i class="fa-solid fa-code mr-1"></i>Made for Muhammad Javed</span>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-4 py-3 rounded-xl shadow-xl border border-slate-800 dark:border-slate-200">
+        <i class="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+        <span id="toastMessage" class="text-sm font-medium">Copied successfully</span>
+    </div>
+
+    <script>
+        // System variables tracking contextual states
+        let inputLanguage = 'ur'; // 'ur' or 'en'
+        let processingMode = 'direct'; // 'direct' or 'translate'
+        let isRecording = false;
+        let recognition = null;
+        let debounceTimeout = null;
+        
+        // Roman Urdu quick translit dictionary maps for direct formatting engine fallbacks
+        const romanUrduMap = {
+            "salaam": "سلام", "assalam": "السلام", "alaikum": "علیکم", "o": "و", "khush": "خوش", "amdeed": "آمدید",
+            "kya": "کیا", "kia": "کیا", "hal": "حال", "haal": "حال", "hai": "ہے", "hain": "ہیں", "ho": "ہو",
+            "theek": "ٹھیک", "shukriya": "شکریہ", "allah": "اللہ", "hafiz": "حافظ", "pakistan": "پاکستان",
+            "urdu": "اردو", "english": "انگریزی", "naam": "نام", "mera": "میرا", "aap": "آپ", "ka": "کا",
+            "ki": "کی", "ko": "کو", "mai": "میں", "main": "میں", "bhi": "بھی"
+        };
+
+        // DOM Element cache registration maps
+        const textInput = document.getElementById('textInput');
+        const textOutput = document.getElementById('textOutput');
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+        const micText = document.getElementById('micText');
+        const voiceIndicator = document.getElementById('voiceIndicator');
+        const voiceStatusText = document.getElementById('voiceStatusText');
+        const inputCharCount = document.getElementById('inputCharCount');
+        const outputCharCount = document.getElementById('outputCharCount');
+        const detectionIndicator = document.getElementById('detectionIndicator');
+        const translationStatus = document.getElementById('translationStatus');
+        const targetBadge = document.getElementById('targetBadge');
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const historyList = document.getElementById('historyList');
+
+        // Theme initialization parameters
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            themeIcon.className = 'fa-solid fa-sun text-lg';
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeIcon.className = 'fa-solid fa-moon text-lg';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                themeIcon.className = 'fa-solid fa-moon text-lg';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                themeIcon.className = 'fa-solid fa-sun text-lg';
+            }
+        });
+
+        // Live Processing Event Triggers
+        textInput.addEventListener('input', () => {
+            autoDetectLanguage(textInput.value);
+            processTextPipeline();
+        });
+
+        document.getElementById('clearInputBtn').addEventListener('click', () => {
+            textInput.value = '';
+            textOutput.textContent = '';
+            updateCharCounts();
+            showToast('Input space cleared');
+        });
+
+        document.getElementById('swapLangBtn').addEventListener('click', () => {
+            setInputLang(inputLanguage === 'ur' ? 'en' : 'ur');
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const outputText = textOutput.textContent;
+            if(!outputText || outputText === "Translating...") return showToast('Nothing to copy yet!');
+            
+            navigator.clipboard.writeText(outputText).then(() => {
+                showToast('Copied successfully');
+                saveToHistory(textInput.value.trim(), outputText.trim());
+            }).catch(() => {
+                showToast('Failed to access system clipboard structure');
+            });
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const dataToSave = textOutput.textContent;
+            if(!dataToSave) return showToast('Output element structure empty');
+            
+            const blob = new Blob([dataToSave], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `InPage_Export_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File downloaded successfully');
+        });
+
+        document.getElementById('ttsBtn').addEventListener('click', () => {
+            const stringToSpeak = textOutput.textContent;
+            if(!stringToSpeak) return showToast('No data to read');
+            
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(stringToSpeak);
+            // Dynamic voice alignment depending on output box text layout direction
+            utterance.lang = textOutput.getAttribute('dir') === 'rtl' ? 'ur-PK' : 'en-US';
+            window.speechSynthesis.speak(utterance);
+            showToast('Playing conversion playback audio...');
+        });
+
+        // Configures structural input source variables
+        function setInputLang(lang) {
+            inputLanguage = lang;
+            const srcUrduBtn = document.getElementById('srcUrduBtn');
+            const srcEngBtn = document.getElementById('srcEngBtn');
+
+            if(lang === 'ur') {
+                srcUrduBtn.className = "px-3 py-1 text-xs font-medium rounded-md transition-all shadow-sm bg-emerald-600 text-white";
+                srcEngBtn.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-600 dark:text-slate-400 transition-all";
+            } else {
+                srcEngBtn.className = "px-3 py-1 text-xs font-medium rounded-md transition-all shadow-sm bg-emerald-600 text-white";
+                srcUrduBtn.className = "px-3 py-1 text-xs font-medium rounded-md text-slate-600 dark:text-slate-400 transition-all";
+            }
+            processTextPipeline();
+        }
+
+        // NEW SWITCHER FUNCTION FOR SELECTING PROCESSING MODES
+        function setOutputMode(mode) {
+            processingMode = mode;
+            const modeDirectBtn = document.getElementById('modeDirectBtn');
+            const modeTranslateBtn = document.getElementById('modeTranslateBtn');
+
+            if(mode === 'direct') {
+                modeDirectBtn.className = "px-3 py-1 text-xs font-semibold rounded-md transition-all shadow-sm bg-emerald-600 text-white flex items-center gap-1.5";
+                modeTranslateBtn.className = "px-3 py-1 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-400 transition-all flex items-center gap-1.5";
+            } else {
+                modeTranslateBtn.className = "px-3 py-1 text-xs font-semibold rounded-md transition-all shadow-sm bg-emerald-600 text-white flex items-center gap-1.5";
+                modeDirectBtn.className = "px-3 py-1 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-400 transition-all flex items-center gap-1.5";
+            }
+            processTextPipeline();
+        }
+
+        // Language sensor scanning inputs
+        function autoDetectLanguage(text) {
+            if(!text.trim()) {
+                detectionIndicator.textContent = "Auto-detecting language type...";
+                return;
+            }
+            if(/[\u0600-\u06FF]/.test(text)) {
+                detectionIndicator.textContent = "Detected System Format: Native Urdu Script";
+                if(inputLanguage !== 'ur') setInputLang('ur');
+            } else {
+                detectionIndicator.textContent = "Detected System Format: Latin Alphabet (English/Roman)";
+            }
+        }
+
+        // Controller deciding whether text drops into Direct formatting or triggers Cloud Translation APIs
+        function processTextPipeline() {
+            updateCharCounts();
+            clearTimeout(debounceTimeout);
+
+            if (processingMode === 'direct') {
+                executeDirectConversion();
+            } else {
+                // If Translate mode is active, set debounce delay to protect server API paths
+                translationStatus.classList.remove('hidden');
+                debounceTimeout = setTimeout(() => {
+                    executeCloudTranslation();
+                }, 600);
+            }
+        }
+
+        // PIPELINE 1: Direct Text/InPage Formatting Engine
+        function executeDirectConversion() {
+            translationStatus.classList.add('hidden');
+            textOutput.classList.remove('shimmer');
+            const sourceText = textInput.value;
+
+            if(!sourceText.trim()) {
+                textOutput.textContent = '';
+                return;
+            }
+
+            if(inputLanguage === 'ur') {
+                textOutput.setAttribute('dir', 'rtl');
+                textOutput.className = "w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 overflow-y-auto text-xl font-nastaliq leading-[2.2] text-right placeholder:text-slate-400 select-all transition-all";
+                targetBadge.textContent = "[InPage Unicode Urdu Mode]";
+
+                if(/[\u0600-\u06FF]/.test(sourceText)) {
+                    textOutput.textContent = sourceText;
+                } else {
+                    // Try transliterating Roman words locally 
+                    let structuralTokens = sourceText.split(/(\s+)/);
+                    let compiledOutput = structuralTokens.map(token => {
+                        let dynamicCleanKey = token.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                        return romanUrduMap[dynamicCleanKey] || token;
+                    }).join('');
+                    textOutput.textContent = compiledOutput;
+                }
+            } else {
+                // English Direct Input Pipeline output
+                textOutput.setAttribute('dir', 'ltr');
+                textOutput.className = "w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 overflow-y-auto text-base font-sans leading-relaxed text-left placeholder:text-slate-400 select-all transition-all";
+                targetBadge.textContent = "[English Raw Text Mode]";
+                textOutput.textContent = sourceText;
+            }
+            updateCharCounts();
+        }
+
+        // PIPELINE 2: Live Cloud API Grammatical Translation Engine
+        async function executeCloudTranslation() {
+            const queryText = textInput.value.trim();
+            if(!queryText) {
+                textOutput.textContent = '';
+                translationStatus.classList.add('hidden');
+                return;
+            }
+
+            textOutput.classList.add('shimmer');
+            
+            // Auto detect target layout alignment settings depending on written text shapes
+            const containsUrduCharacters = /[\u0600-\u06FF]/.test(queryText);
+            let langPair = 'en|ur'; // fallback translation setup
+
+            if (containsUrduCharacters) {
+                langPair = 'ur|en';
+                textOutput.setAttribute('dir', 'ltr');
+                textOutput.className = "w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 overflow-y-auto text-base font-sans leading-relaxed text-left placeholder:text-slate-400 select-all transition-all";
+                targetBadge.textContent = "[Translated English text]";
+            } else {
+                langPair = 'en|ur';
+                textOutput.setAttribute('dir', 'rtl');
+                textOutput.className = "w-full h-64 bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 overflow-y-auto text-xl font-nastaliq leading-[2.2] text-right placeholder:text-slate-400 select-all transition-all";
+                targetBadge.textContent = "[InPage Translated Urdu]";
+            }
+
+            try {
+                const apiEndpoint = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(queryText)}&langpair=${langPair}&de=javed_converter@example.com`;
+                const response = await fetch(apiEndpoint);
+                if (!response.ok) throw new Error('API down');
+                
+                const data = await response.json();
+                if(data.responseData && data.responseData.translatedText) {
+                    textOutput.textContent = data.responseData.translatedText;
+                }
+            } catch (error) {
+                console.error("Translation Engine Fault: ", error);
+                textOutput.textContent = "Cloud connection timing out. Using direct fallback formats instead.";
+            } finally {
+                translationStatus.classList.add('hidden');
+                textOutput.classList.remove('shimmer');
+                updateCharCounts();
+            }
+        }
+
+        function updateCharCounts() {
+            inputCharCount.textContent = `${textInput.value.length} chars`;
+            outputCharCount.textContent = `${textOutput.textContent.length} characters`;
+        }
+
+        // Web Speech API Recording Management Loop
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                micBtn.className = "flex items-center space-x-2 bg-rose-600 hover:bg-rose-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-rose-600/10 hover:shadow-rose-600/20 transition-all active:scale-95 group";
+                micIcon.className = "fa-solid fa-microphone-slash animate-bounce";
+                micText.textContent = "Stop Dictation";
+                voiceIndicator.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                const speechResultIndex = event.resultIndex;
+                const transcriptResult = event.results[speechResultIndex][0].transcript;
+                
+                if (textInput.value.trim() === '') {
+                    textInput.value = transcriptResult;
+                } else {
+                    textInput.value += " " + transcriptResult;
+                }
+                
+                autoDetectLanguage(textInput.value);
+                processTextPipeline();
+            };
+
+            recognition.onerror = () => { stopRecordingEngineSequence(); };
+            recognition.onend = () => { stopRecordingEngineSequence(); };
+        } else {
+            micBtn.disabled = true;
+            micBtn.className = "flex items-center space-x-2 bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-medium px-5 py-2.5 rounded-xl cursor-not-allowed";
+            micText.textContent = "Mic Unsupported";
+        }
+
+        micBtn.addEventListener('click', () => {
+            if(!recognition) return;
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.lang = inputLanguage === 'ur' ? 'ur-PK' : 'en-US';
+                recognition.start();
+            }
+        });
+
+        function stopRecordingEngineSequence() {
+            isRecording = false;
+            micBtn.className = "flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 transition-all active:scale-95 group";
+            micIcon.className = "fa-solid fa-microphone";
+            micText.textContent = "Voice Input";
+            voiceIndicator.classList.add('hidden');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center space-x-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-4 py-3 rounded-xl shadow-xl border border-slate-800 dark:border-slate-200";
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-4 py-3 rounded-xl shadow-xl border border-slate-800 dark:border-slate-200";
+            }, 3000);
+        }
+
+        function saveToHistory(input, output) {
+            if(!input || !output) return;
+            let currentHistory = JSON.parse(localStorage.getItem('converter_history') || '[]');
+            if(currentHistory.length > 0 && currentHistory[0].output === output) return;
+            currentHistory.unshift({ input, output, timestamp: new Date().toLocaleTimeString() });
+            if(currentHistory.length > 5) currentHistory.pop();
+            localStorage.setItem('converter_history', JSON.stringify(currentHistory));
+            renderHistoryLog();
+        }
+
+        function renderHistoryLog() {
+            let currentHistory = JSON.parse(localStorage.getItem('converter_history') || '[]');
+            if(currentHistory.length === 0) {
+                historyList.innerHTML = `<p class="text-slate-400 dark:text-slate-500 italic py-2">No dynamic history entries found.</p>`;
+                return;
+            }
+            historyList.innerHTML = currentHistory.map((item, index) => `
+                <div onclick="restoreHistoryItem(${index})" class="p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-lg hover:border-emerald-500/50 dark:hover:border-emerald-400/50 cursor-pointer transition-all flex justify-between items-center group">
+                    <span class="truncate max-w-[180px] font-medium text-slate-700 dark:text-slate-300">${item.input}</span>
+                    <div class="flex items-center space-x-1.5 text-[10px] text-slate-400">
+                        <span>${item.timestamp}</span>
+                        <i class="fa-solid fa-arrow-turn-up text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function restoreHistoryItem(index) {
+            let currentHistory = JSON.parse(localStorage.getItem('converter_history') || '[]');
+            if(currentHistory[index]) {
+                textInput.value = currentHistory[index].input;
+                autoDetectLanguage(textInput.value);
+                processTextPipeline();
+                showToast('History item loaded');
+            }
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('converter_history');
+            renderHistoryLog();
+            showToast('History list items purged cleanly');
+        }
+
+        renderHistoryLog();
+    </script>
+</body>
+</html>
